@@ -1,21 +1,24 @@
 const express = require('express');
-const app = express();
-const path = require('path');
 const bodyParser = require('body-parser');
+const sequelize = require('./config/database');
+const userRoutes = require('./routes/userRoutes');
 
-// Middleware
+// Initialize Express app
+const app = express();
+
+// Middleware to parse form data
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
-// Serve the frontend from the public folder
-app.use(express.static(path.join(__dirname, 'public')));
+// Use routes
+app.use('/api', userRoutes);
 
-// Routes
-const registerRoute = require('./routes/register');
-app.use('/api/register', registerRoute);
-
-// Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Sync database and start the server
+sequelize.sync()
+  .then(() => {
+    console.log('Database synced');
+    app.listen(3000, () => {
+      console.log('Server is running on http://localhost:3000');
+    });
+  })
+  .catch(err => console.log('Error syncing database: ', err));
